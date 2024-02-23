@@ -1,7 +1,93 @@
 <!DOCTYPE html>
 <html>
+<title>Temperature DEV</title>
 <body>
-<h1>Hello World</h1>
-<p>TEST.</p>
+	<h2 id="CurrentTemperature"></h2>
+	<p id="TimeOfReception"></p>
+	<h3>History:</h3> 
+	<div id="historyValue"></div>
+	
+
+ <script>
+	var token = 'vnoQdwAAAA1ldTEubG9yaW90LmlvMmVlem_L_mA-G9yBXmJh0w==';
+	var url = 'wss://eu1.loriot.io/app?token={token}';
+	var socket = new WebSocket(url.replace('{token}', token));
+	var reply = "";
+	var requestCache = '{ "cmd":"cq","filter":{"EUI":"F80DF10000007375"}, "page" : 1, "perPage" : 100}';
+
+	socket.onopen = function(evt) 
+	{
+		console.log("OnOpen", evt);
+		socket.send(requestCache);
+    };
+    socket.onclose = function() 
+	{
+        document.querySelector('#status').textContent = 'Disconnected from webserver';
+	};
+    socket.onerror = function(msg) 
+	{
+        console.log("error", msg);
+	};
+	socket.onmessage = function(msg)
+	{
+		console.log('onmessage', msg);
+		var data = JSON.parse(msg.data);
+		
+		
+		if (data.cmd !== 'cq') return;
+		var RxDate= new Date(data.cache[0].ts).toLocaleDateString("en-GB");
+		var RxTime= new Date(data.cache[0].ts).toLocaleTimeString("fr-FR");
+		document.getElementById('TimeOfReception').innerHTML ='Date and time of reception : ' +RxDate + " / "+RxTime; 
+		var MBusFrame = data.cache[0].data;
+
+		var temperature = MBusFrame.substring(6);
+		temperature = changeEndianness(temperature);
+
+		temperature = (parseInt(temperature,16))/100;
+		document.getElementById('CurrentTemperature').innerHTML ='Current temperature : ' +temperature + "°C"; 
+		
+		//Historical values
+		var length = data.cache.length;
+		for(let i=1 ; i<length ; i++)
+		{
+			Display_temperature_history(data.cache[i])
+		}
+	}
+
+
+	function Display_temperature_history(mbusFrame)
+	{		
+		var date= new Date(mbusFrame.ts).toLocaleDateString("en-GB");
+		var time= new Date(mbusFrame.ts).toLocaleTimeString("fr-FR");
+
+		var temperature = mbusFrame.data.substring(6);
+		temperature = changeEndianness(temperature);
+		temperature = (parseInt(temperature,16))/100;
+
+		AddToScreen(temperature + "°C  - "+date + " / "+time);
+
+	}
+
+
+	const changeEndianness = (string) => 
+	{
+        const result = [];
+        let len = string.length - 2;
+        while (len >= 0) {
+          result.push(string.substr(len, 2));
+          len -= 2;
+        }
+        return result.join('');
+	}
+
+	function AddToScreen(message)
+	{
+		// Create a new paragraph element, and append it to the end of the document body
+		const p = document.createElement("p");
+		p.innerHTML = message;
+		document.body.appendChild(p);
+	}
+
+</script>
 </body>
 </html>
