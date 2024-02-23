@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <html>
 <title>Temperature DEV</title>
 <body>
@@ -44,7 +45,7 @@
 		temperature = changeEndianness(temperature);
 
 		temperature = (parseInt(temperature,16))/100;
-		document.getElementById('CurrentTemperature').innerHTML ='Current temperature : ' +temperature + "°C"; 
+		document.getElementById('CurrentTemperature').innerHTML ='Current temperature : ' +temperature + "&deg;C"; 
 		
 		//Historical values
 		var length = data.cache.length;
@@ -64,7 +65,7 @@
 		temperature = changeEndianness(temperature);
 		temperature = (parseInt(temperature,16))/100;
 
-		AddToScreen(temperature + "°C  - "+date + " / "+time);
+		AddToScreen(temperature + "&deg;C  - "+date + " / "+time);
 
 	}
 
